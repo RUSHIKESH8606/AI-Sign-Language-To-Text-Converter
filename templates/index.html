@@ -1,0 +1,814 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignToText | AI Sign Language Converter</title>
+
+    <style>
+        :root {
+            --bg: #f5f4fb;
+            --surface: #ffffff;
+            --primary: #7775c9;
+            --primary-dark: #5d5ab0;
+            --lavender: #eeedff;
+            --mint: #e6f6ef;
+            --text: #30334b;
+            --muted: #85879c;
+            --border: #e9e8f2;
+            --danger: #d96c7c;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(circle at 5% 5%, #efedff 0, transparent 28%),
+                radial-gradient(circle at 95% 20%, #e5f7ef 0, transparent 25%),
+                var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        button {
+            font: inherit;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 6%;
+            background: rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid var(--border);
+            gap: 15px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 21px;
+            letter-spacing: -0.5px;
+        }
+
+        .brand-icon {
+            width: 43px;
+            height: 43px;
+            display: grid;
+            place-items: center;
+            background: var(--lavender);
+            border-radius: 14px;
+            font-size: 24px;
+        }
+
+        .brand span {
+            color: var(--primary-dark);
+        }
+
+        .nav-label {
+            color: #5b9178;
+            background: var(--mint);
+            padding: 9px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 42px 18px 28px;
+        }
+
+        .eyebrow {
+            color: var(--primary-dark);
+            background: var(--lavender);
+            padding: 8px 13px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 800;
+            display: inline-block;
+            letter-spacing: 1px;
+        }
+
+        .hero h1 {
+            margin: 18px 0 12px;
+            font-size: clamp(30px, 5vw, 45px);
+            letter-spacing: -1.5px;
+        }
+
+        .hero h1 span {
+            color: var(--primary);
+        }
+
+        .hero p {
+            color: var(--muted);
+            max-width: 620px;
+            margin: auto;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .dashboard {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 12px 22px 45px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.85fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(225, 224, 240, 0.9);
+            border-radius: 22px;
+            padding: 23px;
+            box-shadow: 0 12px 35px rgba(66, 62, 112, 0.055);
+            min-width: 0;
+        }
+
+        .card-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 17px;
+        }
+
+        .card-heading h2 {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .subheading {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: #fff0f1;
+            color: #bd6571;
+            padding: 7px 11px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background: #dc7b87;
+            border-radius: 50%;
+        }
+
+        .camera-box {
+            background: #f0eff8;
+            border: 1px solid #e6e4f2;
+            border-radius: 17px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        video {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+            background: #e8e7f1;
+            transform: scaleX(-1);
+        }
+
+        .camera-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            color: var(--muted);
+            background: #f0eff8;
+        }
+
+        .camera-placeholder .camera-icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+        }
+
+        .camera-placeholder strong {
+            color: var(--text);
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .camera-placeholder p {
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .camera-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            margin: 13px 0 17px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #c7c7d6;
+            border-radius: 50%;
+        }
+
+        .status-indicator.active {
+            background: #54b78a;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: 0;
+            padding: 12px 16px;
+            border-radius: 11px;
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #f0eff8;
+            color: #5f5b9e;
+        }
+
+        .btn-secondary:hover {
+            background: #e6e4f8;
+        }
+
+        .btn-danger {
+            background: #fff0f1;
+            color: var(--danger);
+        }
+
+        .result-card {
+            background: linear-gradient(140deg, #f0efff, #f9f7ff);
+            border: 1px solid #e4e1ff;
+            border-radius: 17px;
+            padding: 21px;
+            margin-bottom: 18px;
+        }
+
+        .result-label {
+            color: #7775a6;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+        }
+
+        #prediction {
+            font-size: clamp(28px, 4vw, 38px);
+            font-weight: 850;
+            letter-spacing: -1px;
+            color: #5d5ab0;
+            overflow-wrap: anywhere;
+            margin: 15px 0 18px;
+        }
+
+        .confidence-row {
+            display: flex;
+            justify-content: space-between;
+            color: #7775a6;
+            font-size: 12px;
+            margin-bottom: 9px;
+        }
+
+        .progress-track {
+            height: 7px;
+            border-radius: 20px;
+            background: #dedcf7;
+            overflow: hidden;
+        }
+
+        #confidenceBar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #8f8be3, #6f6cc4);
+            border-radius: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .transcript-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin: 24px 0 14px;
+        }
+
+        .transcript-heading h3 {
+            font-size: 16px;
+            margin: 0;
+        }
+
+        #wordCount {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .transcript {
+            background: #fbfbfe;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            min-height: 135px;
+            padding: 15px;
+        }
+
+        #transcriptText {
+            font-size: 16px;
+            line-height: 1.9;
+            overflow-wrap: anywhere;
+            color: #46465f;
+        }
+
+        .empty-transcript {
+            color: #a0a0b3;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .transcript-actions {
+            display: flex;
+            gap: 9px;
+            margin-top: 12px;
+        }
+
+        .transcript-actions button {
+            flex: 1;
+            padding: 10px 9px;
+            font-size: 12px;
+        }
+
+        .info-note {
+            background: #eaf7f0;
+            color: #54866f;
+            padding: 13px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            line-height: 1.7;
+            margin-top: 18px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 22px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        @media (max-width: 800px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                max-width: 620px;
+            }
+
+            .hero {
+                padding-top: 32px;
+            }
+
+            .navbar {
+                padding: 15px 5%;
+            }
+
+            .brand {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .dashboard {
+                padding: 8px 12px 28px;
+            }
+
+            .card {
+                padding: 17px;
+                border-radius: 18px;
+            }
+
+            .nav-label {
+                font-size: 10px;
+                padding: 7px 9px;
+            }
+
+            .hero h1 {
+                letter-spacing: -0.8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div class="brand">
+        <div class="brand-icon">🤟</div>
+        <div>AI Sign Language To Text Converter</div>
+    </div>
+    <div class="nav-label">✦ AI POWERED</div>
+</nav>
+
+<section class="hero">
+    <div class="eyebrow">YOUR HANDS, YOUR VOICE</div>
+    <h1>Every gesture tells a <span>story.</span></h1>
+    <p>
+        Turn hand gestures into readable text with AI-powered sign recognition.
+        Simple, accessible, and designed to make communication easier.
+    </p>
+</section>
+
+<main class="dashboard">
+
+    <!-- CAMERA PANEL -->
+    <section class="card">
+        <div class="card-heading">
+            <div>
+                <h2>Gesture recognition</h2>
+                <div class="subheading">Position your hand inside the camera view.</div>
+            </div>
+            <div class="live-badge">
+                <span class="live-dot"></span>
+                LIVE CAMERA
+            </div>
+        </div>
+
+        <div class="camera-box">
+            <video id="webcam" autoplay playsinline muted></video>
+
+            <div class="camera-placeholder" id="cameraPlaceholder">
+                <div class="camera-icon">📷</div>
+                <strong>Your camera is waiting</strong>
+                <p>Start your webcam to begin recognizing signs.</p>
+            </div>
+        </div>
+
+        <div class="camera-status">
+            <span class="status-indicator" id="statusIndicator"></span>
+            <span id="status" role="status" aria-live="polite">
+                Camera not started
+            </span>
+        </div>
+
+        <div class="buttons">
+            <button class="btn btn-primary" id="startButton">
+                ▶ Start webcam
+            </button>
+            <button class="btn btn-secondary" id="stopButton" disabled>
+                ■ Stop
+            </button>
+        </div>
+
+        <div class="info-note">
+            💡 <strong>Tip:</strong> Use good lighting, keep your hand
+            fully visible, and hold each gesture clearly for a moment.
+        </div>
+    </section>
+
+    <!-- PREDICTION AND TRANSCRIPT PANEL -->
+    <section class="card">
+        <div class="card-heading">
+            <div>
+                <h2>Live translation</h2>
+                <div class="subheading">Your latest recognized gesture.</div>
+            </div>
+            <span style="font-size:25px;">✨</span>
+        </div>
+
+        <div class="result-card">
+            <div class="result-label">CURRENT SIGN</div>
+            <div id="prediction" aria-live="polite">Ready...</div>
+
+            <div class="confidence-row">
+                <span>Model confidence</span>
+                <strong id="confidence">--</strong>
+            </div>
+
+            <div class="progress-track">
+                <div id="confidenceBar"></div>
+            </div>
+        </div>
+
+        <div class="transcript-heading">
+            <h3>📝 Previous words</h3>
+            <span id="wordCount">0 words</span>
+        </div>
+
+        <div class="transcript">
+            <div id="transcriptText" aria-live="polite">
+                <div class="empty-transcript">
+                    Your recognized words will appear here as you make
+                    different gestures.
+                </div>
+            </div>
+        </div>
+
+        <div class="transcript-actions">
+            <button class="btn btn-secondary" id="copyButton">
+                ⧉ Copy text
+            </button>
+            <button class="btn btn-danger" id="clearButton">
+                Clear history
+            </button>
+        </div>
+
+        <div class="subheading" style="line-height:1.7; margin-top:14px;">
+            The transcript stays in this browser page while it remains open.
+            It is not saved permanently.
+        </div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    SignSpeak · AI Sign Language to Text Converter
+</footer>
+
+<canvas id="captureCanvas" hidden></canvas>
+
+<script>
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("captureCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const startButton = document.getElementById("startButton");
+    const stopButton = document.getElementById("stopButton");
+    const cameraPlaceholder = document.getElementById("cameraPlaceholder");
+
+    const predictionElement = document.getElementById("prediction");
+    const confidenceElement = document.getElementById("confidence");
+    const confidenceBar = document.getElementById("confidenceBar");
+    const statusElement = document.getElementById("status");
+    const statusIndicator = document.getElementById("statusIndicator");
+
+    const transcriptElement = document.getElementById("transcriptText");
+    const wordCountElement = document.getElementById("wordCount");
+
+    let cameraStream = null;
+    let captureTimer = null;
+    let isPredicting = false;
+
+    // Transcript exists for this page session.
+    let transcriptWords = [];
+
+    // Avoid adding the same prediction repeatedly while holding a gesture.
+    let lastRecognizedWord = "";
+
+    function setStatus(message, active = false) {
+        statusElement.textContent = message;
+        statusIndicator.classList.toggle("active", active);
+    }
+
+    function renderTranscript() {
+        transcriptElement.replaceChildren();
+
+        if (transcriptWords.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "empty-transcript";
+            empty.textContent =
+                "Your recognized words will appear here as you make different gestures.";
+            transcriptElement.appendChild(empty);
+        } else {
+            transcriptElement.textContent = transcriptWords.join(" ");
+        }
+
+        wordCountElement.textContent =
+            `${transcriptWords.length} ${
+                transcriptWords.length === 1 ? "word" : "words"
+            }`;
+    }
+
+    function addTranscriptWord(word) {
+        if (!word || word === "No hand detected") {
+            lastRecognizedWord = "";
+            return;
+        }
+
+        if (word === lastRecognizedWord) {
+            return;
+        }
+
+        lastRecognizedWord = word;
+        transcriptWords.push(word);
+        renderTranscript();
+    }
+
+    async function startWebcam() {
+        if (!navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia) {
+            setStatus("Webcam access requires localhost or HTTPS.");
+            return;
+        }
+
+        try {
+            setStatus("Requesting camera permission...");
+
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: "user",
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                },
+                audio: false
+            });
+
+            video.srcObject = cameraStream;
+            await video.play();
+
+            cameraPlaceholder.style.display = "none";
+            startButton.disabled = true;
+            stopButton.disabled = false;
+
+            setStatus("Camera active — show a hand gesture.", true);
+
+            // Capture frames periodically without overlapping requests.
+            captureTimer = setInterval(sendFrame, 1000);
+
+        } catch (error) {
+            console.error("Camera error:", error);
+            setStatus(
+                "Camera access failed. Allow camera permission and try again."
+            );
+        }
+    }
+
+    async function sendFrame() {
+        if (
+            isPredicting ||
+            !cameraStream ||
+            video.readyState < 2 ||
+            video.videoWidth === 0
+        ) {
+            return;
+        }
+
+        isPredicting = true;
+
+        try {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Send original RGB camera frame; CSS mirroring is only visual.
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const blob = await new Promise(resolve => {
+                canvas.toBlob(resolve, "image/jpeg", 0.85);
+            });
+
+            if (!blob) {
+                throw new Error("Unable to capture a camera frame.");
+            }
+
+            const formData = new FormData();
+            formData.append("image", blob, "webcam.jpg");
+
+            const response = await fetch("/predict", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Prediction request failed.");
+            }
+
+            const word = data.prediction || "No prediction";
+
+            predictionElement.textContent = word;
+
+            if (data.confidence !== undefined) {
+                const score = Math.max(
+                    0, Math.min(100, Number(data.confidence))
+                );
+
+                confidenceElement.textContent = `${score.toFixed(1)}%`;
+                confidenceBar.style.width = `${score}%`;
+            } else {
+                confidenceElement.textContent = "--";
+                confidenceBar.style.width = "0%";
+            }
+
+            if (word === "No hand detected") {
+                setStatus("No hand detected — position your hand in view.", true);
+            } else {
+                setStatus("Recognition active", true);
+                addTranscriptWord(word);
+            }
+
+        } catch (error) {
+            console.error("Prediction error:", error);
+            setStatus("Prediction error: " + error.message);
+        } finally {
+            isPredicting = false;
+        }
+    }
+
+    function stopWebcam() {
+        if (captureTimer !== null) {
+            clearInterval(captureTimer);
+            captureTimer = null;
+        }
+
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+
+        video.srcObject = null;
+        cameraPlaceholder.style.display = "flex";
+
+        startButton.disabled = false;
+        stopButton.disabled = true;
+
+        setStatus("Camera stopped.");
+        predictionElement.textContent = "Ready...";
+        confidenceElement.textContent = "--";
+        confidenceBar.style.width = "0%";
+        lastRecognizedWord = "";
+    }
+
+    startButton.addEventListener("click", startWebcam);
+    stopButton.addEventListener("click", stopWebcam);
+
+    document.getElementById("clearButton").addEventListener("click", () => {
+        transcriptWords = [];
+        lastRecognizedWord = "";
+        renderTranscript();
+    });
+
+    document.getElementById("copyButton").addEventListener("click", async () => {
+        const text = transcriptWords.join(" ");
+
+        if (!text) {
+            setStatus("There are no previous words to copy.");
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(text);
+            setStatus("Transcript copied to clipboard.", Boolean(cameraStream));
+        } catch (error) {
+            setStatus("Clipboard access failed. Try copying the transcript manually.");
+        }
+    });
+
+    window.addEventListener("beforeunload", () => {
+        if (captureTimer !== null) {
+            clearInterval(captureTimer);
+        }
+
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
+    });
+
+    renderTranscript();
+</script>
+
+</body>
+</html>
